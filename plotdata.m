@@ -5,9 +5,9 @@ x = matrix(:, 1);
 y = matrix(:, 2);
 value = matrix(:, 3);
 p = find(value == 1);
-plot(x,y,'r','linewidth',2);
+plot(x,y,'b');
 grid on;
-text(x(p),y(p),'*','color','g');
+text(x(p),y(p),'*','color','r');
 [num, txt, raw] = xlsread('train.csv');
 p = find(num(:, 1) == 1493568000);
 
@@ -86,5 +86,29 @@ li=li';
 xlswrite('train2.xlsx',ti,'Q2:Q9283');
 xlswrite('train2.xlsx',vi,'R2:R9283');
 xlswrite('train2.xlsx',li,'S2:S9283');
+
+fv=[];
+tv=[];
+i=1;
+j=1;
+for a=1:129093
+    if lable(a,1)==0
+        tv(i)=value(a,1);
+        i=i+1;
+    else
+        fv(j)=value(a,1);
+        j=j+1;
+    end
+end
+
+flag='true'
+for a=2:128561
+    if x(a,1)-x(a-1,1) ~= 60
+        flag='false';
+        break;
+    end
+end
+
+        
 
         
