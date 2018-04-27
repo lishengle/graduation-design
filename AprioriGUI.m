@@ -23,7 +23,7 @@ function varargout = AprioriGUI(varargin)
 
 % Edit the above text to modify the response to help AprioriGUI
 
-% Last Modified by GUIDE v2.5 12-Apr-2018 13:39:38
+% Last Modified by GUIDE v2.5 25-Apr-2018 16:42:17
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -110,7 +110,22 @@ if ~isequal(filterindex, 0)
                 idLen = idLen + 1;
             end
         end
+        global IDIndex;
+        IDIndex = zeros(10, 2);
+        index = 1;
+        for i = 1:len
+            if i == 1
+                IDIndex(index, 1) = i;
+            else if ~isequal(allID{i, 1}, ids{1, index + 1})
+                    IDIndex(index, 2) = i - 1;
+                    index = index + 1;
+                    IDIndex(index, 1) = i;
+                end
+            end
+        end
+        IDIndex(10, 2) = len;
         set(handles.IDPopup, 'string', ids);
+        set(handles.testID, 'string', ids);
     end
 end
 
@@ -255,19 +270,19 @@ function mode_Callback(hObject, eventdata, handles)
 % Hint: get(hObject,'Value') returns toggle state of mode
 
 
-% --- Executes on selection change in range.
-function range_Callback(hObject, eventdata, handles)
-% hObject    handle to range (see GCBO)
+% --- Executes on selection change in testID.
+function testID_Callback(hObject, eventdata, handles)
+% hObject    handle to testID (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns range contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from range
+% Hints: contents = cellstr(get(hObject,'String')) returns testID contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from testID
 
 
 % --- Executes during object creation, after setting all properties.
-function range_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to range (see GCBO)
+function testID_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to testID (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -283,4 +298,204 @@ function trainbutton_Callback(hObject, eventdata, handles)
 % hObject    handle to trainbutton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+index = get(handles.testID, 'Value');
+global ids;
+nowID = ids{1, index};
+if isequal(nowID, 'KPI ID')
+    hepldlg('请选择KPI ID', '提示');
+else 
+    global trainNum;
+    global IDIndex;
+    startX = IDIndex(index - 1, 1);
+    endX = IDIndex(index - 2, 2);
+    mid = floor(0.8 * (endX - startX)) + startX;
+    trainTime = trainNum(startX : mid, 1);
+    testTime = trainNum(mid : endX, 1);
+    trainValue = trainNum(startX : mid, 2);
+    testValue = trainNum(mid : endX, 2);
+    trainLabel = trainNum(startX : mid, 3);
+    testLabel = trainNum(mid : endX, 3);
+    p = find(trainLabel == 1);
+    testLen = length(testTime);
+    predictLabel = zeros(testLen, 1);
+    for i = 1 : length(p)
+        for j = 1 : testLen
+            if trainValue(i, 1) == testValue(j, 1)
+                predictLable(j, 1) = 1;
+            end
+        end
+    end
+    tp = 0;
+    fp = 0;
+    fn = 0;
+    for i = 1 : testLen
+        if testLabel(i, 1) == 0
+            if predictLabel(i, 1) == 1
+                fp = fp + 1;
+            end
+        else
+            if predictLabel(i, 1) == 1
+                tp = tp + 1;
+            else 
+                fn = fn + 1;
+            end
+        end
+    end
+    precision = tp / (tp + fp);
+    recall = tp / (tp + fn);
+    score = (2 * precision * recall) / (precision + recall);
+    set(handles.precision, 'string', ['精确度：', num2str(precision)]);
+    set(handles.recall, 'string', ['召回率：', num2str(precision)]);
+    set(handles.score, 'string', ['F-Score：', num2str(precision)]);
+    
+    er = find(testLabel == 1);
+    plot(handles.axes5, testTime,testValue,'b');
+    grid on;
+    text(handles.axes5, testTime(er),testValue(er),'*','color','r');
+    
+    er = find(predictLabel == 1);
+    plot(handles.axes6, testTime,testValue,'b');
+    grid on;
+    text(handles.axes6, testTime(er),testValue(er),'*','color','r');
+end
 
+
+% --- Executes during object creation, after setting all properties.
+function uipanel2_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to uipanel2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+
+
+% --------------------------------------------------------------------
+function file_Callback(hObject, eventdata, handles)
+% hObject    handle to file (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function edit_Callback(hObject, eventdata, handles)
+% hObject    handle to edit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function tools_Callback(hObject, eventdata, handles)
+% hObject    handle to tools (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function Untitled_11_Callback(hObject, eventdata, handles)
+% hObject    handle to Untitled_11 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function about_Callback(hObject, eventdata, handles)
+% hObject    handle to about (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function help_Callback(hObject, eventdata, handles)
+% hObject    handle to help (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function saveImage_Callback(hObject, eventdata, handles)
+% hObject    handle to saveImage (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function saveTest_Callback(hObject, eventdata, handles)
+% hObject    handle to saveTest (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function clearData_Callback(hObject, eventdata, handles)
+% hObject    handle to clearData (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function color_Callback(hObject, eventdata, handles)
+% hObject    handle to color (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function big_Callback(hObject, eventdata, handles)
+% hObject    handle to big (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function small_Callback(hObject, eventdata, handles)
+% hObject    handle to small (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function train_Callback(hObject, eventdata, handles)
+% hObject    handle to train (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+
+% --------------------------------------------------------------------
+function test_Callback(hObject, eventdata, handles)
+% hObject    handle to test (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --------------------------------------------------------------------
+function exit_Callback(hObject, eventdata, handles)
+% hObject    handle to exit (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+
+% --- Executes during object creation, after setting all properties.
+function axes5_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to axes5 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: place code in OpeningFcn to populate axes5
+title('测试集检测结果');
+
+
+% --- Executes during object creation, after setting all properties.
+function axes6_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to axes6 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: place code in OpeningFcn to populate axes6
+title('测试集原结果');
+
+
+% --- Executes during object creation, after setting all properties.
+function uibuttongroup4_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to uibuttongroup4 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
